@@ -1,0 +1,62 @@
+services:
+  # PostgreSQL with PostGIS
+  db:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: howard_sidewalk_db
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:-howard_sidewalk_db}
+      POSTGRES_USER: ${DATABASE_USER:-appuser}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-ChangeMe_StrongPW}
+    # Security: bind to 127.0.0.1 only; use firewall/VPN for remote access
+    ports:
+      - "127.0.0.1:15432:5432"
+    volumes:
+      # Persistent data
+      - pgdata:/var/lib/postgresql/data
+      # Init scripts (run on first start only)
+      - ./sql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+    networks:
+      - howard_network
+
+  # Next.js app
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: howard_sidewalk_app
+    environment:
+      # DB connection (container network); app uses db:5432
+      DATABASE_URL: postgresql://${DATABASE_USER:-appuser}:${DATABASE_PASSWORD:-ChangeMe_StrongPW}@db:5432/${DATABASE_NAME:-howard_sidewalk_db}
+      # API keys
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://us.api.openai.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+      MAPILLARY_CLIENT_TOKEN: ${MAPILLARY_CLIENT_TOKEN}
+      # Connection pool
+      DB_POOL_MAX: ${DB_POOL_MAX:-10}
+      DB_IDLE_TIMEOUT_MS: ${DB_IDLE_TIMEOUT_MS:-30000}
+      DB_CONN_TIMEOUT_MS: ${DB_CONN_TIMEOUT_MS:-5000}
+    # Security: bind to 127.0.0.1; use Nginx/Caddy reverse proxy in production
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - howard_network
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+    name: howard_sidewalk_pgdata
+
+networks:
+  howard_network:
+    name: howard_sidewalk_network
+    driver: bridge

@@ -1,0 +1,403 @@
+===============================================
+Howard County Sidewalk Planning System
+QUICK DEPLOYMENT GUIDE - WINDOWS
+===============================================
+
+⚡ Deploy in 5-10 minutes on Windows!
+
+===============================================
+STEP 1: INSTALL DOCKER DESKTOP (Windows)
+===============================================
+
+A. Download Docker Desktop
+   
+   1. Visit: https://www.docker.com/products/docker-desktop
+   2. Click "Download for Windows"
+   3. Run the installer (Docker Desktop Installer.exe)
+
+B. Enable WSL 2 (Recommended)
+   
+   Open PowerShell as Administrator:
+   
+   wsl --install
+   
+   Restart your computer when prompted.
+
+C. Start Docker Desktop
+   
+   1. Launch Docker Desktop from Start Menu
+   2. Wait for Docker to start (whale icon in system tray)
+   3. Accept the terms if prompted
+
+D. Verify Installation
+   
+   Open PowerShell or Command Prompt:
+   
+   docker --version
+   docker compose version
+   
+   Expected output:
+   Docker version 24.x.x
+   Docker Compose version v2.x.x
+
+===============================================
+STEP 2: EXTRACT & CONFIGURE
+===============================================
+
+A. Extract Archive
+   
+   Method 1: Using File Explorer
+   - Right-click howard-sidewalk-deployment-*.tar.gz
+   - Select "Extract All..."
+   - Choose destination folder
+   
+   Method 2: Using PowerShell
+   - Open PowerShell
+   - Navigate to download folder:
+     cd Downloads
+   - Extract (if you have tar):
+     tar -xzf howard-sidewalk-deployment-*.tar.gz
+   
+   Method 3: Using 7-Zip
+   - Right-click the file
+   - 7-Zip → Extract Here
+
+B. Open Folder
+   
+   cd howard-sidewalk-deployment-YYYYMMDD-HHMMSS\my-app
+
+C. Create Environment File
+   
+   Copy template:
+   copy .env.example .env
+   
+   Edit with Notepad:
+   notepad .env
+   
+   Fill in these values:
+   
+   OPENAI_API_KEY=sk-proj-your-actual-key-here
+   MAPILLARY_CLIENT_TOKEN=your-actual-token-here
+   DATABASE_PASSWORD=ChangeMe_StrongPW
+   
+   Get keys:
+   - OpenAI: https://platform.openai.com/api-keys
+   - Mapillary: https://www.mapillary.com/dashboard/developers
+   
+   Save and close Notepad.
+
+===============================================
+STEP 3: DEPLOY
+===============================================
+
+A. Open PowerShell or Command Prompt
+   
+   Navigate to project folder:
+   cd path\to\howard-sidewalk-deployment-*\my-app
+
+B. Start Services
+   
+   docker compose up -d --build
+   
+   Wait 3-5 minutes for first build.
+
+C. Monitor Progress
+   
+   Check status:
+   docker compose ps
+   
+   View logs:
+   docker compose logs -f
+   
+   Press Ctrl+C to exit logs.
+
+===============================================
+ACCESS
+===============================================
+
+Local Access:
+   http://localhost:3000
+
+From Another Computer (same network):
+   1. Find your IP:
+      ipconfig
+      (Look for IPv4 Address)
+   
+   2. Access from browser:
+      http://YOUR_IP:3000
+
+Windows Firewall (if needed):
+   - Open Windows Defender Firewall
+   - Advanced settings → Inbound Rules
+   - New Rule → Port → TCP → 3000
+   - Allow the connection
+
+===============================================
+VERIFY
+===============================================
+
+A. Check Database
+   
+   docker compose exec db psql -U appuser -d howard_sidewalk_db -c "SELECT COUNT(*) FROM roads_howard;"
+   
+   Expected: 9000+ roads
+
+B. Test API
+   
+   PowerShell:
+   Invoke-WebRequest http://localhost:3000/api/sidewalks?scenario=base
+   
+   Or use browser:
+   http://localhost:3000/api/sidewalks?scenario=base
+
+C. Open Application
+   
+   Browser: http://localhost:3000
+
+===============================================
+COMMON COMMANDS
+===============================================
+
+View logs:
+   docker compose logs -f
+
+Restart services:
+   docker compose restart
+
+Stop services:
+   docker compose down
+
+Check status:
+   docker compose ps
+
+Update application:
+   docker compose down
+   docker compose up -d --build
+
+===============================================
+TROUBLESHOOTING
+===============================================
+
+Issue: Docker Desktop won't start
+Solution:
+   - Enable Virtualization in BIOS
+   - Enable WSL 2: wsl --install
+   - Restart computer
+   - Reinstall Docker Desktop
+
+Issue: "docker" command not found
+Solution:
+   - Make sure Docker Desktop is running (whale icon)
+   - Restart PowerShell/Command Prompt
+   - Check Docker Desktop settings
+
+Issue: WSL 2 installation failed
+Solution:
+   Open PowerShell as Administrator:
+   dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+   dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+   Restart computer
+
+Issue: Cannot extract .tar.gz
+Solution:
+   - Install 7-Zip: https://www.7-zip.org/
+   - Or use built-in tar (Windows 10+):
+     tar -xzf filename.tar.gz
+
+Issue: OpenAI 401 error
+Solution:
+   - Check API key in .env file
+   - Make sure no extra spaces
+   - Verify OPENAI_BASE_URL is correct
+   - Restart: docker compose restart
+
+Issue: Port 3000 already in use
+Solution:
+   Find process using port:
+   netstat -ano | findstr :3000
+   
+   Kill process (replace PID):
+   taskkill /PID [PID] /F
+
+Issue: Cannot access from browser
+Solution:
+   - Check Docker Desktop is running
+   - Check firewall settings
+   - Try: http://127.0.0.1:3000
+   - Check containers: docker compose ps
+
+Issue: Slow performance
+Solution:
+   - Allocate more resources in Docker Desktop
+   - Settings → Resources → Advanced
+   - Increase CPU and Memory
+   - Recommended: 4 CPU, 8GB RAM
+
+===============================================
+SYSTEM REQUIREMENTS
+===============================================
+
+Minimum:
+   - Windows 10 64-bit (Pro, Enterprise, Education)
+   - or Windows 11
+   - 8GB RAM
+   - 20GB free disk space
+   - Virtualization enabled in BIOS
+
+Recommended:
+   - Windows 11 or Windows 10 (latest version)
+   - 16GB RAM
+   - SSD with 50GB free space
+   - WSL 2 enabled
+
+===============================================
+WINDOWS-SPECIFIC TIPS
+===============================================
+
+1. Use PowerShell (recommended) or Command Prompt
+   - PowerShell: More powerful, modern
+   - CMD: Traditional, simple
+
+2. File Paths
+   - Use backslashes: C:\Users\YourName\Desktop
+   - Or forward slashes work too: C:/Users/YourName/Desktop
+
+3. Line Endings
+   - .env file should use Unix line endings (LF)
+   - Most editors handle this automatically
+
+4. Performance
+   - Store project files in WSL 2 for better performance
+   - Or keep in Windows filesystem if needed
+
+5. Firewall
+   - Docker Desktop handles most networking
+   - May need to allow Docker in Windows Firewall
+
+===============================================
+ALTERNATIVE: USING WSL 2 (Advanced)
+===============================================
+
+For better performance, run inside WSL 2:
+
+1. Open WSL 2 (Ubuntu):
+   wsl
+   
+2. Navigate to Windows folder:
+   cd /mnt/c/Users/YourName/Downloads/my-app
+   
+3. Follow Linux instructions:
+   sudo apt update
+   sudo apt install docker.io docker-compose-plugin -y
+   docker compose up -d --build
+
+===============================================
+INCLUDED
+===============================================
+
+✓ Next.js application
+✓ PostgreSQL + PostGIS
+✓ 9,613 real Howard County roads
+✓ Auto-initialization
+✓ Complete documentation
+
+===============================================
+DOCUMENTATION
+===============================================
+
+Windows Guide:
+   - This file (QUICK_DEPLOY_WINDOWS.txt)
+
+General Guides:
+   - QUICK_START.md (Linux-focused)
+   - README_FOR_DEPLOYMENT.md
+   - DEPLOYMENT_FROM_ARCHIVE.md
+   - DATABASE_ACCESS.md
+
+===============================================
+QUICK TEST
+===============================================
+
+After deployment:
+
+1. Open browser: http://localhost:3000
+
+2. Type in the input box:
+   "Add sidewalk on both sides of Fels Lane"
+
+3. Click Submit or press Enter
+
+4. See AI-generated sidewalk plan on the map!
+
+===============================================
+UNINSTALL
+===============================================
+
+Remove application:
+   cd path\to\my-app
+   docker compose down -v
+
+Remove Docker Desktop:
+   - Settings → Apps → Docker Desktop
+   - Uninstall
+
+===============================================
+COMMON POWERSHELL COMMANDS
+===============================================
+
+Navigate folders:
+   cd C:\Users\YourName\Desktop
+   cd ..               (go up one folder)
+   dir                 (list files)
+
+Create folder:
+   mkdir foldername
+
+Copy file:
+   copy file.txt file2.txt
+
+Edit file:
+   notepad filename.txt
+
+Check IP:
+   ipconfig
+
+===============================================
+GETTING HELP
+===============================================
+
+Docker Desktop Issues:
+   https://docs.docker.com/desktop/troubleshoot/overview/
+
+WSL 2 Issues:
+   https://docs.microsoft.com/en-us/windows/wsl/troubleshooting
+
+Application Issues:
+   See DEPLOYMENT_FROM_ARCHIVE.md → Troubleshooting
+
+===============================================
+SUCCESS CHECKLIST
+===============================================
+
+□ Docker Desktop installed and running
+□ WSL 2 enabled (recommended)
+□ Archive extracted
+□ .env file configured with API keys
+□ docker compose up completed
+□ Both containers running (docker compose ps)
+□ Application accessible at http://localhost:3000
+□ Can plan sidewalks via natural language
+
+===============================================
+
+🎉 Success! 
+
+Application running at: http://localhost:3000
+
+Try planning a sidewalk and explore the features!
+
+===============================================
+Last Updated: 2026-02-03
+Platform: Windows 10/11
+Difficulty: Easy ⭐⭐⭐
+===============================================
